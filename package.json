@@ -1,0 +1,9 @@
+{
+  "name": "table_editor",
+  "description": "table data editor",
+  "dependencies": {},
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.4"
+  }
+}
