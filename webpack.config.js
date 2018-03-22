@@ -6,12 +6,18 @@ module.exports = {
     path: __dirname + '/static',
     filename: "build.js"
 	},
+  watch: true,
     module: {
-        loaders: [
+        rules: [
             {
                 test: /\.js$/,
-                loader: 'babel-loader',
-                exclude: [/node_modules/, /public/]
+                use: 'babel-loader',
+                exclude: [/node_modules/, /static/]
+            },
+            {
+                test: /\.css$/,
+                use: ['style-loader', 'css-loader'],
+                //exclude: [/node_modules/, /static/]
             }
         ]
     }
