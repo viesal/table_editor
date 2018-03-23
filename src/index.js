@@ -4,6 +4,6 @@ import 'bootstrap/dist/css/bootstrap.css';
 
 window.onload = ()=>{
     let table = new Table(document.body);
+    console.dir(table.tbody)
 };
 
-// console.log(table)
