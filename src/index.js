@@ -1,9 +1,16 @@
 import Table from './Table/Table.js';
-import 'bootstrap';
+import img from './favicon.png';
 import 'bootstrap/dist/css/bootstrap.css';
+import 'webpack-icons-installer/bootstrap';
+
 
 window.onload = ()=>{
     let table = new Table(document.body);
-    console.dir(table.tbody)
+    let favicon = document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.href = 'static/'+img;
+    favicon.type = 'image/png';
+    document.head.appendChild(favicon);
+
 };
 

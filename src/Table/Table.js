@@ -5,53 +5,60 @@ class Table {
     constructor(container){
         this.container = container;
         this.table = document.createElement('table');
-        this.table.className = 'table table-striped table-hover';
+        this.table.className = 'table table-sm table-striped table-hover';
 
         this.thead = document.createElement('thead');
+        this.tbody = document.createElement('tbody');
         this.tableTitle = document.createElement('tr');
 
-        this.tableTitle__index = document.createElement('th');
-        this.tableTitle__index.scope = 'col';
-        this.tableTitle__index.innerHTML = '#';
+        this.tableTitle__index = this.create_th('#');
+        this.tableTitle__name = this.create_th('Наименование');
+        this.tableTitle__value = this.create_th('Значение');
+        this.tableTitle__act = this.create_th(' ');
 
-        this.tableTitle__name = document.createElement('th');
-        this.tableTitle__name.scope = 'col';
-        this.tableTitle__name.innerHTML = 'Наименование';
-
-        this.tableTitle__value = document.createElement('th');
-        this.tableTitle__value.scope = 'col';
-        this.tableTitle__value.innerHTML = 'Значение';
-
-        this.tbody = document.createElement('tbody');
+        this.button = document.createElement('button');
+        this.button.type = 'button';
+        this.button.className = 'btn btn-light float-right';
+        this.button.innerText = 'Добавить строку';
+        this.button.addEventListener('click', ()=>{
+            this.add_row(this.tbody.getElementsByTagName('tr').length+1, '', '');
+        });
 
         this.tableTitle.appendChild(this.tableTitle__index);
         this.tableTitle.appendChild(this.tableTitle__name);
         this.tableTitle.appendChild(this.tableTitle__value);
-        
+        this.tableTitle.appendChild(this.tableTitle__act);
+
         this.thead.appendChild(this.tableTitle);
         this.table.appendChild(this.thead);
         this.table.appendChild(this.tbody);
         this.container.appendChild(this.table);
+        this.container.appendChild(this.button);
+
+        this.drag = {
+            elem: false,
+            avatar: false
+        };
 
         for (let [index, data] of Table__data.entries()){
            this.add_row(index+1, data.name, data.value);
         }
-
-        this.number_row()
     }
 
     add_row(index, name, value){
         let row = new Table__row(this.tbody, index, name, value);
         row.del = document.createElement('td');
-
         row.del__icon = document.createElement('span');
+        row.del__icon.className = 'glyphicon glyphicon-trash float-right';
 
-        row.del__icon.className = 'glyphicon glyphicon-trash';
-
-
-        row.del.addEventListener('click', ()=>{
+        row.del__icon.addEventListener('click', ()=>{
             this.del_row(row.index.innerHTML);
-        })
+        });
+
+        row.tr.onmousedown = (e)=>{this.drag_el(e)};
+        row.tr.onmousemove = (e)=>{this.move_el(e)};
+        row.tr.onmouseup = (e)=>{this.drop_el(e)};
+
         row.del.appendChild(row.del__icon);
         row.tr.appendChild(row.del);
     }
@@ -66,12 +73,146 @@ class Table {
         for (let data of this.tbody.rows){
             i++;
             data.cells[0].innerHTML=i;
-        };
+        }
     }
 
+    create_th(name){
+        let el = document.createElement('th');
+        el.scope = 'col';
+        el.innerHTML = name;
+        return el;
+    }
 
+    drag_el(e){
+
+        if (e.which != 1) {
+            return;
+        }
+        let elem = e.target.closest('tr');
+
+        if (!elem) return;
+
+        this.drag.elem = elem;
+
+        this.drag.downX = e.pageX;
+        this.drag.downY = e.pageY;
+    }
+
+    move_el(e){
+        if (!this.drag.elem) return;
+
+        if ( !this.drag.avatar ) {
+            let moveX = e.pageX - this.drag.downX;
+            let moveY = e.pageY - this.drag.downY;
+            if ( Math.abs(moveX) < 3 && Math.abs(moveY) < 3 ) {
+                return;
+            }
+            this.drag.avatar = this.createAvatar(e);
+            // console.log(this.drag.avatar)
+            if (!this.drag.avatar) {
+                this.drag = {};
+                return;
+            }
+
+            let coords = this.getCoords(this.drag.avatar);
+            this.drag.shiftX = this.drag.downX - coords.left;
+            this.drag.shiftY = this.drag.downY - coords.top;
+
+            this.startDrag(e);
+        }
+
+        this.drag.avatar.style.left = e.pageX - this.drag.shiftX + 'px';
+        this.drag.avatar.style.top = e.pageY - this.drag.shiftY + 'px';
+
+        return false;
+    }
+
+    createAvatar(e) {
+        let avatar = this.drag.elem;
+        let old = {
+            parent: avatar.parentNode,
+            nextSibling: avatar.nextSibling,
+            position: avatar.position || '',
+            left: avatar.left || '',
+            top: avatar.top || '',
+            zIndex: avatar.zIndex || ''
+        };
+
+        // функция для отмены переноса
+        avatar.rollback = function() {
+            old.parent.insertBefore(avatar, old.nextSibling);
+            avatar.style.position = old.position;
+            avatar.style.left = old.left;
+            avatar.style.top = old.top;
+            avatar.style.zIndex = old.zIndex
+        };
+
+        return avatar;
+    }
+
+    startDrag(e) {
+        let avatar = this.drag.avatar;
+
+        this.table.appendChild(avatar);
+        avatar.style.zIndex = 9999;
+        avatar.style.position = 'absolute';
+    }
+    drop_el(e){
+        console.log('drop')
+        if (this.drag.avatar) {
+            console.log('finish')
+            this.finishDrag(e);
+        }
+
+        this.drag = {};
+
+
+        // this.onmouseup = function(e) {
+        //     console.log(this)
+        //     if (this.drag.avatar) {
+        //         this.finishDrag(e);
+        //     }
+        //
+        //     this.drag = {};
+        // }
+    }
+
+    finishDrag(e) {
+        let dropElem = this.findDroppable(e);
+
+        if (dropElem) {
+            console.log(this.drag.avatar)
+            this.tbody.insertBefore(this.drag.avatar, dropElem)
+            this.drag.avatar.style.position = 'inherit';
+            console.log(dropElem)
+            console.log('успешный перенос')
+            console.log(this.tbody)
+            this.number_row()
+        //... успешный перенос ...
+        } else {
+            console.log('отмена переноса')
+        //... отмена переноса ...
+        }
+    }
+
+    findDroppable(event) {
+
+        // взять элемент на данных координатах
+        var elem = document.elementFromPoint(event.clientX, event.clientY);
+
+        // найти ближайший сверху droppable
+        return elem.closest('tr');
+    }
+
+    getCoords(elem) {
+        var box = elem.getBoundingClientRect();
+
+        return {
+            top: box.top + pageYOffset,
+            left: box.left + pageXOffset
+        };
+
+    }
 }
 
 export default Table;
-
-//module.exports = Table;
