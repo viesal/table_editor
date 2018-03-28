@@ -59,6 +59,13 @@ class Table {
         row.tr.onmousemove = (e)=>{this.move_el(e)};
         row.tr.onmouseup = (e)=>{this.drop_el(e)};
 
+        document.onmouseup = (e)=>{
+            if (this.drag.avatar){
+                this.drag.avatar.rollback();
+                this.drag = {};
+            }
+        }
+
         row.del.appendChild(row.del__icon);
         row.tr.appendChild(row.del);
     }
@@ -84,46 +91,33 @@ class Table {
     }
 
     drag_el(e){
-
-        if (e.which != 1) {
-            return;
-        }
+        if (e.which != 1) return;
         let elem = e.target.closest('tr');
-
         if (!elem) return;
-
         this.drag.elem = elem;
-
         this.drag.downX = e.pageX;
         this.drag.downY = e.pageY;
     }
 
     move_el(e){
         if (!this.drag.elem) return;
-
         if ( !this.drag.avatar ) {
             let moveX = e.pageX - this.drag.downX;
             let moveY = e.pageY - this.drag.downY;
-            if ( Math.abs(moveX) < 3 && Math.abs(moveY) < 3 ) {
-                return;
-            }
+            if ( Math.abs(moveX) < 3 && Math.abs(moveY) < 3 ) return
             this.drag.avatar = this.createAvatar(e);
-            // console.log(this.drag.avatar)
             if (!this.drag.avatar) {
                 this.drag = {};
                 return;
             }
-
             let coords = this.getCoords(this.drag.avatar);
             this.drag.shiftX = this.drag.downX - coords.left;
             this.drag.shiftY = this.drag.downY - coords.top;
-
             this.startDrag(e);
         }
 
-        this.drag.avatar.style.left = e.pageX - this.drag.shiftX + 'px';
+        // this.drag.avatar.style.left = e.pageX - this.drag.shiftX + 'px';
         this.drag.avatar.style.top = e.pageY - this.drag.shiftY + 'px';
-
         return false;
     }
 
@@ -138,7 +132,6 @@ class Table {
             zIndex: avatar.zIndex || ''
         };
 
-        // функция для отмены переноса
         avatar.rollback = function() {
             old.parent.insertBefore(avatar, old.nextSibling);
             avatar.style.position = old.position;
@@ -152,61 +145,30 @@ class Table {
 
     startDrag(e) {
         let avatar = this.drag.avatar;
-
         this.table.appendChild(avatar);
-        avatar.style.zIndex = 9999;
+        //avatar.style.zIndex = 9999;
         avatar.style.position = 'absolute';
     }
     drop_el(e){
-        console.log('drop')
         if (this.drag.avatar) {
-            console.log('finish')
             this.finishDrag(e);
         }
-
         this.drag = {};
-
-
-        // this.onmouseup = function(e) {
-        //     console.log(this)
-        //     if (this.drag.avatar) {
-        //         this.finishDrag(e);
-        //     }
-        //
-        //     this.drag = {};
-        // }
     }
 
     finishDrag(e) {
-        let dropElem = this.findDroppable(e);
-
+        let dropElem = document.elementFromPoint(e.clientX, e.clientY).closest('tr');
         if (dropElem) {
-            console.log(this.drag.avatar)
             this.tbody.insertBefore(this.drag.avatar, dropElem)
             this.drag.avatar.style.position = 'inherit';
-            console.log(dropElem)
-            console.log('успешный перенос')
-            console.log(this.tbody)
             this.number_row()
-        //... успешный перенос ...
         } else {
-            console.log('отмена переноса')
-        //... отмена переноса ...
+            this.drag.avatar.rollback()
         }
     }
 
-    findDroppable(event) {
-
-        // взять элемент на данных координатах
-        var elem = document.elementFromPoint(event.clientX, event.clientY);
-
-        // найти ближайший сверху droppable
-        return elem.closest('tr');
-    }
-
     getCoords(elem) {
-        var box = elem.getBoundingClientRect();
-
+        const box = elem.getBoundingClientRect();
         return {
             top: box.top + pageYOffset,
             left: box.left + pageXOffset

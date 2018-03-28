@@ -1,5 +1,6 @@
 import Table from './Table/Table.js';
 import img from './favicon.png';
+import './style.css';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'webpack-icons-installer/bootstrap';
 
