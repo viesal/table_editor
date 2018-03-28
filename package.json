@@ -2,11 +2,12 @@
   "name": "table_editor",
   "description": "table data editor",
   "dependencies": {
-    "node-static": "^0.7.10",
+    "bootstrap": "^4.0.0",
     "jquery": "^3.3.1",
-    "webpack-icons-installer": "^1.0.0",
+    "json-2-csv": "^2.2.0",
+    "node-static": "^0.7.10",
     "popper.js": "^1.14.1",
-    "bootstrap": "^4.0.0"
+    "webpack-icons-installer": "^1.0.0"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",

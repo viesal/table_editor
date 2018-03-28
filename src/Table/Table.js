@@ -1,5 +1,5 @@
-import Table__data from './Table__data.js';
 import Table__row from './Table__row.js';
+import converter from 'json-2-csv';
 
 class Table {
     constructor(container){
@@ -16,13 +16,48 @@ class Table {
         this.tableTitle__value = this.create_th('Значение');
         this.tableTitle__act = this.create_th(' ');
 
-        this.button = document.createElement('button');
-        this.button.type = 'button';
-        this.button.className = 'btn btn-light float-right';
-        this.button.innerText = 'Добавить строку';
-        this.button.addEventListener('click', ()=>{
+
+        this.div_button = document.createElement('div');
+
+        this.button_add_row = document.createElement('button');
+        this.button_add_row.type = 'button';
+        this.button_add_row.className = 'btn btn-light';
+        this.button_add_row.innerText = 'Добавить строку';
+        this.button_add_row.addEventListener('click', ()=>{
             this.add_row(this.tbody.getElementsByTagName('tr').length+1, '', '');
         });
+
+        this.button_unload_json = document.createElement('button');
+        this.button_unload_json.type = 'button';
+        this.button_unload_json.className = 'btn btn-light float-left';
+        this.button_unload_json.innerText = 'Выгрузить в JSON';
+        this.button_unload_json.addEventListener('click', ()=>{
+            this.textarea.value = this.data_to_json()
+        });
+
+        this.button_load_json = document.createElement('button');
+        this.button_load_json.type = 'button';
+        this.button_load_json.className = 'btn btn-light float-left';
+        this.button_load_json.innerText = 'Загрузить из JSON';
+        this.button_load_json.addEventListener('click', ()=>{
+            this.json_to_data()
+        });
+
+        this.button_unload_csv = document.createElement('button');
+        this.button_unload_csv.type = 'button';
+        this.button_unload_csv.className = 'btn btn-light float-left';
+        this.button_unload_csv.innerText = 'Выгрузить в csv';
+        this.button_unload_csv.addEventListener('click', ()=>{
+            this.json_to_csv()
+        });
+
+        this.textarea = document.createElement('textarea');
+        this.textarea.style.width = '100%';
+        
+        this.div_button.appendChild(this.button_unload_json);
+        this.div_button.appendChild(this.button_load_json);
+        this.div_button.appendChild(this.button_unload_csv);
+        this.div_button.appendChild(this.button_add_row);
 
         this.tableTitle.appendChild(this.tableTitle__index);
         this.tableTitle.appendChild(this.tableTitle__name);
@@ -32,17 +67,15 @@ class Table {
         this.thead.appendChild(this.tableTitle);
         this.table.appendChild(this.thead);
         this.table.appendChild(this.tbody);
+
         this.container.appendChild(this.table);
-        this.container.appendChild(this.button);
+        this.container.appendChild(this.div_button);
+        this.container.appendChild(this.textarea);
 
         this.drag = {
             elem: false,
             avatar: false
         };
-
-        for (let [index, data] of Table__data.entries()){
-           this.add_row(index+1, data.name, data.value);
-        }
     }
 
     add_row(index, name, value){
@@ -71,7 +104,10 @@ class Table {
     }
 
     del_row(index){
-        this.tbody.getElementsByClassName('Table__row')[index-1].remove();
+        let del_el = this.tbody.getElementsByClassName('Table__row')[index-1];
+        if (del_el.getElementsByTagName('input')[0] == undefined){
+            del_el.remove()
+        }
         this.number_row();
     }
 
@@ -113,10 +149,11 @@ class Table {
             let coords = this.getCoords(this.drag.avatar);
             this.drag.shiftX = this.drag.downX - coords.left;
             this.drag.shiftY = this.drag.downY - coords.top;
-            this.startDrag(e);
-        }
 
-        // this.drag.avatar.style.left = e.pageX - this.drag.shiftX + 'px';
+            let avatar = this.drag.avatar;
+            avatar.style.position = 'absolute';
+            this.table.appendChild(avatar);
+        }
         this.drag.avatar.style.top = e.pageY - this.drag.shiftY + 'px';
         return false;
     }
@@ -143,12 +180,6 @@ class Table {
         return avatar;
     }
 
-    startDrag(e) {
-        let avatar = this.drag.avatar;
-        this.table.appendChild(avatar);
-        //avatar.style.zIndex = 9999;
-        avatar.style.position = 'absolute';
-    }
     drop_el(e){
         if (this.drag.avatar) {
             this.finishDrag(e);
@@ -174,6 +205,39 @@ class Table {
             left: box.left + pageXOffset
         };
 
+    }
+
+    data_to_json(){
+        let arr = [];
+        for (let child of this.tbody.childNodes){
+            let data = {
+                name: child.childNodes[1].innerHTML,
+                value: child.childNodes[2].innerHTML
+            }
+            arr.push(data);
+        }
+        return JSON.stringify(arr)
+    }
+
+    json_to_data(){
+        try{
+            let json = JSON.parse(this.textarea.value);
+            for (let [index, data] of json.entries()) {
+                this.add_row(this.tbody.getElementsByTagName('tr').length+1, data.name, data.value);
+            } 
+        }
+        catch(err){
+            alert(err);
+        }
+    }
+
+    json_to_csv(){
+        let json2csvCallback = function (err, csv) {
+            if (err) throw err;
+            console.log(csv);
+        };
+        let json = JSON.parse(this.data_to_json())
+        converter.json2csv(json, json2csvCallback);
     }
 }
 
