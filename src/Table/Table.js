@@ -1,5 +1,4 @@
 import Table__row from './Table__row.js';
-import converter from 'json-2-csv';
 
 class Table {
     constructor(container){
@@ -232,12 +231,17 @@ class Table {
     }
 
     json_to_csv(){
-        let json2csvCallback = function (err, csv) {
-            if (err) throw err;
-            console.log(csv);
-        };
         let json = JSON.parse(this.data_to_json())
-        converter.json2csv(json, json2csvCallback);
+        var csv = 'name,value\n';
+        for (let row of json){
+                csv += `${row.name},${row.value}`;
+                csv += "\n";
+            };
+        let hid = document.createElement('a');
+        hid.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+        hid.target = '_blank';
+        hid.download = 'data.csv';
+        hid.click();    
     }
 }
 
