@@ -1,8 +1,13 @@
 {
   "name": "table_editor",
   "description": "table data editor",
+  "scripts": {
+    "build": "webpack",
+    "watch": "webpack --watch"
+  },
   "dependencies": {
     "bootstrap": "^4.0.0",
+    "classnames": "^2.2.5",
     "jquery": "^3.3.1",
     "node-static": "^0.7.10",
     "popper.js": "^1.14.1",
