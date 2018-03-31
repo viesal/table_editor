@@ -1,12 +1,13 @@
 'use strict';
 
+const path = require('path');
+
 module.exports = {
-  entry: "./src/index.js",
-  output: {
-    path: __dirname + '/static',
-    filename: "build.js"
-	},
-  watch: true,
+    entry: "./src/index.js",
+    output: {
+        path: path.resolve(__dirname, './static'),
+        filename: "build.js"
+    },
     module: {
         rules: [
             {
@@ -15,6 +16,7 @@ module.exports = {
                 exclude: [/node_modules/, /static/]
             },
             {
+                // TODO: use postcss
                 test: /\.css$/,
                 use: ['style-loader', 'css-loader'],
                 exclude: [/static/]
@@ -36,7 +38,7 @@ module.exports = {
                 use: [{
                     loader: 'expose-loader',
                     options: 'jQuery'
-                },{
+                }, {
                     loader: 'expose-loader',
                     options: '$'
                 }]
